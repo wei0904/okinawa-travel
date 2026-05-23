@@ -451,23 +451,10 @@ function sendQuestion() {
 function findAnswer(question) {
     const q = question.toLowerCase();
 
-    // === 知識庫關鍵字匹配 ===
-    if (q.includes('季節') || q.includes('什麼時候') || q.includes('幾月'))
-        return qaKnowledge['最佳旅遊季節'];
-    if (q.includes('自駕') || q.includes('開車') || q.includes('租車') || q.includes('駕照'))
-        return qaKnowledge['自駕注意事項'];
-    if (q.includes('伴手禮') || q.includes('必買') || q.includes('紀念品') || q.includes('土產'))
-        return qaKnowledge['必買伴手禮'];
-    if (q.includes('親子') || q.includes('小孩') || q.includes('兒童') || q.includes('小朋友'))
-        return qaKnowledge['親子旅遊推薦'];
-    if (q.includes('美食') || q.includes('必吃') || q.includes('吃什麼') || q.includes('好吃'))
-        return qaKnowledge['必吃美食'];
-    if (q.includes('機場') || q.includes('交通') || q.includes('市區') || q.includes('電車') || q.includes('單軌'))
-        return qaKnowledge['機場交通'];
-    if (q.includes('住宿') || q.includes('飯店') || q.includes('旅館') || q.includes('住哪'))
-        return qaKnowledge['住宿推薦'];
-    if (q.includes('預算') || q.includes('花費') || q.includes('多少錢') || q.includes('費用'))
-        return qaKnowledge['預算規劃'];
+    // ============================
+    // 第一步：先偵測有沒有提到具體分類
+    // 有的話優先走分類推薦，不會被知識庫攔截
+    // ============================
 
     // === 分類餐廳查詢 ===
     const categoryMap = {
@@ -571,6 +558,31 @@ function findAnswer(question) {
         });
         return answer;
     }
+
+    // ============================
+    // 第二步：沒有具體分類 → 走知識庫匹配
+    // ============================
+    if (q.includes('季節') || q.includes('什麼時候') || q.includes('幾月'))
+        return qaKnowledge['最佳旅遊季節'];
+    if (q.includes('自駕') || q.includes('開車') || q.includes('租車') || q.includes('駕照'))
+        return qaKnowledge['自駕注意事項'];
+    if (q.includes('伴手禮') || q.includes('必買') || q.includes('紀念品') || q.includes('土產'))
+        return qaKnowledge['必買伴手禮'];
+    if (q.includes('親子') || q.includes('小孩') || q.includes('兒童') || q.includes('小朋友'))
+        return qaKnowledge['親子旅遊推薦'];
+    if (q.includes('機場') || q.includes('交通') || q.includes('市區') || q.includes('電車') || q.includes('單軌'))
+        return qaKnowledge['機場交通'];
+    if (q.includes('住宿') || q.includes('飯店') || q.includes('旅館') || q.includes('住哪'))
+        return qaKnowledge['住宿推薦'];
+    if (q.includes('預算') || q.includes('花費') || q.includes('多少錢') || q.includes('費用'))
+        return qaKnowledge['預算規劃'];
+    // 「美食/必吃/好吃」放最後，避免攔截「最好吃的燒肉」這類問題
+    if (q.includes('美食') || q.includes('必吃') || q.includes('吃什麼') || q.includes('好吃'))
+        return qaKnowledge['必吃美食'];
+
+    // ============================
+    // 第三步：一般性搜尋
+    // ============================
 
     // === 搜尋餐廳 ===
     if (q.includes('餐廳') || q.includes('推薦吃') || q.includes('吃') || q.includes('餐')) {
