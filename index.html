@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沖繩旅遊小幫手</title>
+    <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+    <header>
+        <h1>沖繩旅遊小幫手</h1>
+        <p class="subtitle">探索沖繩的美食、景點與文化</p>
+    </header>
+
+    <nav id="main-nav">
+        <button class="nav-btn active" data-tab="restaurants">餐廳美食</button>
+        <button class="nav-btn" data-tab="attractions">觀光景點</button>
+        <button class="nav-btn" data-tab="shopping">購物商店</button>
+        <button class="nav-btn" data-tab="route">路線規劃</button>
+        <button class="nav-btn" data-tab="qa">旅遊問答</button>
+    </nav>
+
+    <!-- 搜尋列 -->
+    <div id="search-bar">
+        <input type="text" id="search-input" placeholder="搜尋餐廳、景點、商店...">
+        <select id="area-filter">
+            <option value="all">所有區域</option>
+            <option value="那霸">那霸市</option>
+            <option value="北谷">北谷町</option>
+            <option value="恩納">恩納村</option>
+            <option value="名護">名護市</option>
+            <option value="本部">本部町</option>
+            <option value="讀谷">讀谷村</option>
+            <option value="豐見城">豐見城市</option>
+            <option value="南城">南城市</option>
+            <option value="宜野灣">宜野灣市</option>
+            <option value="浦添">浦添市</option>
+            <option value="糸滿">糸滿市</option>
+            <option value="國頭">國頭村</option>
+            <option value="今歸仁">今歸仁村</option>
+            <option value="金武">金武町</option>
+        </select>
+    </div>
+
+    <!-- 餐廳分類標籤 -->
+    <div id="category-tags" class="tab-content" data-for="restaurants">
+        <div class="tags-container">
+            <button class="tag active" data-category="all">全部</button>
+            <button class="tag" data-category="沖繩料理">沖繩料理</button>
+            <button class="tag" data-category="燒肉">燒肉</button>
+            <button class="tag" data-category="壽司/海鮮">壽司/海鮮</button>
+            <button class="tag" data-category="拉麵/沖繩麵">拉麵/沖繩麵</button>
+            <button class="tag" data-category="居酒屋">居酒屋</button>
+            <button class="tag" data-category="咖啡廳">咖啡廳</button>
+            <button class="tag" data-category="甜點/冰品">甜點/冰品</button>
+            <button class="tag" data-category="漢堡/美式">漢堡/美式</button>
+            <button class="tag" data-category="牛排">牛排</button>
+            <button class="tag" data-category="早午餐">早午餐</button>
+        </div>
+    </div>
+
+    <!-- 景點分類標籤 -->
+    <div id="attraction-tags" class="tab-content" data-for="attractions" style="display:none">
+        <div class="tags-container">
+            <button class="tag active" data-category="all">全部</button>
+            <button class="tag" data-category="自然景觀">自然景觀</button>
+            <button class="tag" data-category="歷史文化">歷史文化</button>
+            <button class="tag" data-category="主題樂園">主題樂園</button>
+            <button class="tag" data-category="海灘">海灘</button>
+            <button class="tag" data-category="體驗活動">體驗活動</button>
+            <button class="tag" data-category="神社寺廟">神社寺廟</button>
+            <button class="tag" data-category="親子景點">親子景點</button>
+        </div>
+    </div>
+
+    <!-- 購物分類標籤 -->
+    <div id="shopping-tags" class="tab-content" data-for="shopping" style="display:none">
+        <div class="tags-container">
+            <button class="tag active" data-category="all">全部</button>
+            <button class="tag" data-category="購物中心">購物中心</button>
+            <button class="tag" data-category="藥妝店">藥妝店</button>
+            <button class="tag" data-category="超市">超市</button>
+            <button class="tag" data-category="伴手禮">伴手禮</button>
+            <button class="tag" data-category="市場/商店街">市場/商店街</button>
+            <button class="tag" data-category="Outlet">Outlet</button>
+        </div>
+    </div>
+
+    <!-- 主內容區 -->
+    <main id="content">
+        <div id="card-container" class="card-grid"></div>
+
+        <!-- 路線規劃 -->
+        <div id="route-planner" style="display:none">
+            <h2>路線規劃工具</h2>
+            <p class="route-desc">將喜歡的地點加入行程，拖拽排序來規劃每日路線</p>
+            <div class="route-controls">
+                <div class="day-tabs">
+                    <button class="day-tab active" data-day="1">Day 1</button>
+                    <button class="day-tab" data-day="2">Day 2</button>
+                    <button class="day-tab" data-day="3">Day 3</button>
+                    <button class="day-tab" data-day="4">Day 4</button>
+                    <button class="day-tab" data-day="5">Day 5</button>
+                    <button class="add-day-btn" id="add-day">+ 新增天數</button>
+                </div>
+            </div>
+            <div class="route-content">
+                <div class="route-list" id="route-list">
+                    <div class="empty-route">
+                        <p>尚未加入任何地點</p>
+                        <p>請到餐廳、景點或購物頁面，點擊「加入行程」按鈕</p>
+                    </div>
+                </div>
+                <div class="route-summary" id="route-summary">
+                    <h3>行程總覽</h3>
+                    <div id="summary-content">
+                        <p>選擇地點後將顯示行程摘要</p>
+                    </div>
+                    <button id="export-route" class="export-btn">匯出行程表</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 問答區 -->
+        <div id="qa-section" style="display:none">
+            <h2>沖繩旅遊問答</h2>
+            <div class="qa-quick-questions">
+                <p>常見問題：</p>
+                <button class="quick-q" data-q="沖繩最佳旅遊季節是什麼時候？">最佳旅遊季節</button>
+                <button class="quick-q" data-q="沖繩自駕需要注意什麼？">自駕注意事項</button>
+                <button class="quick-q" data-q="沖繩有哪些必買伴手禮？">必買伴手禮</button>
+                <button class="quick-q" data-q="沖繩親子旅遊推薦行程？">親子旅遊推薦</button>
+                <button class="quick-q" data-q="沖繩有什麼必吃美食？">必吃美食</button>
+                <button class="quick-q" data-q="從那霸機場到市區的交通方式？">機場交通</button>
+                <button class="quick-q" data-q="沖繩住宿推薦？">住宿推薦</button>
+                <button class="quick-q" data-q="沖繩旅遊預算大概多少？">預算規劃</button>
+            </div>
+            <div class="qa-chat" id="qa-chat">
+                <div class="chat-message bot">
+                    <div class="chat-bubble">你好！我是沖繩旅遊小幫手，有任何關於沖繩旅遊的問題都可以問我喔！</div>
+                </div>
+            </div>
+            <div class="qa-input">
+                <input type="text" id="qa-input" placeholder="輸入你的問題...">
+                <button id="qa-send">發送</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 地點詳情彈窗 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>沖繩旅遊小幫手 | 祝旅途愉快！</p>
+    </footer>
+
+    <script src="data.js?v=2"></script>
+    <script src="app.js?v=2"></script>
+</body>
+</html>

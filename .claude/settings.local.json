@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/wei/Desktop/**)",
+      "Bash(powershell Compress-Archive -Path \"沖繩旅遊幫手\\\\*\" -DestinationPath \"沖繩旅遊幫手.zip\" -Force)",
+      "Bash(git:*)"
+    ]
+  }
+}
