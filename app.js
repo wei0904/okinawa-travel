@@ -451,7 +451,7 @@ function sendQuestion() {
 function findAnswer(question) {
     const q = question.toLowerCase();
 
-    // 關鍵字匹配
+    // === 知識庫關鍵字匹配 ===
     if (q.includes('季節') || q.includes('什麼時候') || q.includes('幾月'))
         return qaKnowledge['最佳旅遊季節'];
     if (q.includes('自駕') || q.includes('開車') || q.includes('租車') || q.includes('駕照'))
@@ -469,54 +469,198 @@ function findAnswer(question) {
     if (q.includes('預算') || q.includes('花費') || q.includes('多少錢') || q.includes('費用'))
         return qaKnowledge['預算規劃'];
 
-    // 搜尋餐廳
-    if (q.includes('餐廳') || q.includes('推薦吃')) {
-        let results = restaurants;
-        if (q.includes('燒肉')) results = restaurants.filter(r => r.category === '燒肉');
-        else if (q.includes('拉麵') || q.includes('沖繩麵')) results = restaurants.filter(r => r.category === '拉麵/沖繩麵');
-        else if (q.includes('海鮮') || q.includes('壽司')) results = restaurants.filter(r => r.category === '壽司/海鮮');
-        else if (q.includes('咖啡')) results = restaurants.filter(r => r.category === '咖啡廳');
-        else if (q.includes('牛排')) results = restaurants.filter(r => r.category === '牛排');
+    // === 分類餐廳查詢 ===
+    const categoryMap = {
+        '燒肉': '燒肉', '烤肉': '燒肉', '和牛': '燒肉',
+        '拉麵': '拉麵/沖繩麵', '沖繩麵': '拉麵/沖繩麵', 'そば': '拉麵/沖繩麵', '麵': '拉麵/沖繩麵',
+        '海鮮': '壽司/海鮮', '壽司': '壽司/海鮮', '生魚片': '壽司/海鮮', '魚': '壽司/海鮮',
+        '咖啡': '咖啡廳', '下午茶': '咖啡廳', '喝茶': '咖啡廳', 'cafe': '咖啡廳',
+        '牛排': '牛排', 'steak': '牛排',
+        '居酒屋': '居酒屋', '喝酒': '居酒屋', '宵夜': '居酒屋', '泡盛': '居酒屋',
+        '甜點': '甜點/冰品', '冰淇淋': '甜點/冰品', '冰': '甜點/冰品', '刨冰': '甜點/冰品', '蛋糕': '甜點/冰品',
+        '漢堡': '漢堡/美式', '美式': '漢堡/美式', '塔可': '漢堡/美式',
+        '早午餐': '早午餐', '早餐': '早午餐', '鬆餅': '早午餐', 'brunch': '早午餐',
+        '沖繩料理': '沖繩料理', '傳統': '沖繩料理', '古民家': '沖繩料理',
+    };
 
-        if (results.length > 0) {
-            let answer = '推薦以下餐廳：\n\n';
-            results.slice(0, 5).forEach(r => {
-                answer += `【${r.name}】\n${r.desc}\n區域：${r.area} | 價格：${r.price}\n\n`;
-            });
-            return answer;
-        }
+    // 判斷有沒有提到特定餐廳種類
+    let matchedCategory = null;
+    for (const [keyword, cat] of Object.entries(categoryMap)) {
+        if (q.includes(keyword)) { matchedCategory = cat; break; }
     }
 
-    // 搜尋景點
-    if (q.includes('景點') || q.includes('去哪') || q.includes('玩什麼')) {
-        let results = attractions;
-        if (q.includes('海灘') || q.includes('海邊')) results = attractions.filter(a => a.category === '海灘');
-        else if (q.includes('歷史') || q.includes('文化')) results = attractions.filter(a => a.category === '歷史文化');
+    // === 景點分類查詢 ===
+    const attractionCategoryMap = {
+        '海灘': '海灘', '海邊': '海灘', '玩水': '海灘', '游泳': '海灘', '沙灘': '海灘',
+        '歷史': '歷史文化', '城跡': '歷史文化', '世界遺產': '歷史文化', '古蹟': '歷史文化',
+        '水族館': '主題樂園', '樂園': '主題樂園', '動物園': '主題樂園',
+        '浮潛': '體驗活動', '潛水': '體驗活動', '體驗': '體驗活動', '賞鯨': '體驗活動', '陶器': '體驗活動',
+        '神社': '神社寺廟', '御嶽': '神社寺廟', '拜拜': '神社寺廟', '御守': '神社寺廟',
+    };
 
-        let answer = '推薦以下景點：\n\n';
-        results.slice(0, 5).forEach(a => {
-            answer += `【${a.name}】\n${a.desc}\n區域：${a.area} | 費用：${a.price}\n\n`;
+    let matchedAttrCat = null;
+    for (const [keyword, cat] of Object.entries(attractionCategoryMap)) {
+        if (q.includes(keyword)) { matchedAttrCat = cat; break; }
+    }
+
+    // === 「推薦一家」「最推薦」「選一間」「第一名」類型問題 ===
+    const isAskingForBest = q.includes('推薦一') || q.includes('最推') || q.includes('選一') ||
+        q.includes('第一名') || q.includes('最好') || q.includes('no.1') || q.includes('冠軍') ||
+        q.includes('最愛') || q.includes('最強') || q.includes('哪一家') || q.includes('哪間') ||
+        q.includes('選誰') || q.includes('首選');
+
+    if (isAskingForBest) {
+        // 如果有指定類別
+        if (matchedCategory) {
+            const best = restaurants.filter(r => r.category === matchedCategory).sort((a, b) => b.rating - a.rating)[0];
+            if (best) {
+                return `${matchedCategory}最推薦的一家：\n\n` +
+                    `【${best.name}】 ★${best.rating}\n` +
+                    `${best.desc}\n\n` +
+                    `區域：${best.area}\n地址：${best.address}\n價格：${best.price}\n營業時間：${best.hours}\n\n` +
+                    `小提醒：${best.tips}`;
+            }
+        }
+        if (matchedAttrCat) {
+            const best = attractions.filter(a => a.category === matchedAttrCat).sort((a, b) => b.rating - a.rating)[0];
+            if (best) {
+                return `${matchedAttrCat}最推薦的一個：\n\n` +
+                    `【${best.name}】 ★${best.rating}\n` +
+                    `${best.desc}\n\n` +
+                    `區域：${best.area}\n地址：${best.address}\n費用：${best.price}\n\n` +
+                    `小提醒：${best.tips}`;
+            }
+        }
+
+        // 沒指定類別 → 給出各類別的 Top 1
+        const topRestaurant = [...restaurants].sort((a, b) => b.rating - a.rating)[0];
+        const topAttraction = [...attractions].sort((a, b) => b.rating - a.rating)[0];
+        const topCafe = restaurants.filter(r => r.category === '咖啡廳').sort((a, b) => b.rating - a.rating)[0];
+        const topYakiniku = restaurants.filter(r => r.category === '燒肉').sort((a, b) => b.rating - a.rating)[0];
+        const topSoba = restaurants.filter(r => r.category === '拉麵/沖繩麵').sort((a, b) => b.rating - a.rating)[0];
+
+        return `如果各只能選一家，我的推薦是：\n\n` +
+            `【餐廳首選】${topRestaurant.name} ★${topRestaurant.rating}\n${topRestaurant.desc}\n📍${topRestaurant.area}\n\n` +
+            `【燒肉首選】${topYakiniku.name} ★${topYakiniku.rating}\n${topYakiniku.desc}\n📍${topYakiniku.area}\n\n` +
+            `【沖繩麵首選】${topSoba.name} ★${topSoba.rating}\n${topSoba.desc}\n📍${topSoba.area}\n\n` +
+            `【咖啡廳首選】${topCafe.name} ★${topCafe.rating}\n${topCafe.desc}\n📍${topCafe.area}\n\n` +
+            `【景點首選】${topAttraction.name} ★${topAttraction.rating}\n${topAttraction.desc}\n📍${topAttraction.area}`;
+    }
+
+    // === 一般分類餐廳查詢 ===
+    if (matchedCategory) {
+        const results = restaurants.filter(r => r.category === matchedCategory).sort((a, b) => b.rating - a.rating);
+        let answer = `${matchedCategory}推薦餐廳（依評分排序）：\n\n`;
+        results.slice(0, 5).forEach(r => {
+            answer += `【${r.name}】★${r.rating}\n${r.desc}\n📍${r.area} | 💰${r.price}\n\n`;
         });
         return answer;
     }
 
-    // 特定區域查詢
-    const areas = ['那霸', '北谷', '恩納', '名護', '本部', '讀谷', '南城', '糸滿', '今歸仁'];
+    // === 一般分類景點查詢 ===
+    if (matchedAttrCat) {
+        const results = attractions.filter(a => a.category === matchedAttrCat).sort((a, b) => b.rating - a.rating);
+        let answer = `${matchedAttrCat}推薦（依評分排序）：\n\n`;
+        results.slice(0, 5).forEach(a => {
+            answer += `【${a.name}】★${a.rating}\n${a.desc}\n📍${a.area} | 💰${a.price}\n\n`;
+        });
+        return answer;
+    }
+
+    // === 搜尋餐廳 ===
+    if (q.includes('餐廳') || q.includes('推薦吃') || q.includes('吃') || q.includes('餐')) {
+        const top = [...restaurants].sort((a, b) => b.rating - a.rating);
+        let answer = '綜合評分最高的餐廳：\n\n';
+        top.slice(0, 5).forEach(r => {
+            answer += `【${r.name}】★${r.rating} - ${r.category}\n${r.desc}\n📍${r.area} | 💰${r.price}\n\n`;
+        });
+        return answer;
+    }
+
+    // === 景點查詢 ===
+    if (q.includes('景點') || q.includes('去哪') || q.includes('玩什麼') || q.includes('好玩') || q.includes('觀光')) {
+        const top = [...attractions].sort((a, b) => b.rating - a.rating);
+        let answer = '綜合評分最高的景點：\n\n';
+        top.slice(0, 5).forEach(a => {
+            answer += `【${a.name}】★${a.rating} - ${a.category}\n${a.desc}\n📍${a.area} | 💰${a.price}\n\n`;
+        });
+        return answer;
+    }
+
+    // === 購物查詢 ===
+    if (q.includes('購物') || q.includes('逛街') || q.includes('買東西') || q.includes('商店') || q.includes('超市') || q.includes('藥妝')) {
+        const results = q.includes('藥妝') ? shopping.filter(s => s.category === '藥妝店') :
+                        q.includes('超市') ? shopping.filter(s => s.category === '超市') :
+                        [...shopping].sort((a, b) => b.rating - a.rating);
+        let answer = '購物推薦：\n\n';
+        results.slice(0, 5).forEach(s => {
+            answer += `【${s.name}】★${s.rating} - ${s.category}\n${s.desc}\n📍${s.area}\n\n`;
+        });
+        return answer;
+    }
+
+    // === 特定區域查詢 ===
+    const areas = ['那霸', '北谷', '恩納', '名護', '本部', '讀谷', '南城', '糸滿', '今歸仁', '浦添', '豐見城', '宜野灣', '國頭', '金武'];
     for (const area of areas) {
         if (q.includes(area)) {
-            const allItems = [...restaurants, ...attractions, ...shopping].filter(i => i.area === area);
-            if (allItems.length > 0) {
-                let answer = `${area}地區推薦：\n\n`;
-                allItems.slice(0, 8).forEach(item => {
-                    answer += `【${item.name}】${item.category}\n${item.desc}\n\n`;
+            const areaRestaurants = restaurants.filter(i => i.area === area).sort((a, b) => b.rating - a.rating);
+            const areaAttractions = attractions.filter(i => i.area === area).sort((a, b) => b.rating - a.rating);
+            const areaShopping = shopping.filter(i => i.area === area).sort((a, b) => b.rating - a.rating);
+
+            let answer = `📍 ${area}地區推薦：\n\n`;
+
+            if (areaRestaurants.length > 0) {
+                answer += `【美食】\n`;
+                areaRestaurants.slice(0, 3).forEach(item => {
+                    answer += `・${item.name}（${item.category}）★${item.rating}\n`;
                 });
-                return answer;
+                answer += '\n';
             }
+            if (areaAttractions.length > 0) {
+                answer += `【景點】\n`;
+                areaAttractions.slice(0, 3).forEach(item => {
+                    answer += `・${item.name}（${item.category}）★${item.rating}\n`;
+                });
+                answer += '\n';
+            }
+            if (areaShopping.length > 0) {
+                answer += `【購物】\n`;
+                areaShopping.slice(0, 3).forEach(item => {
+                    answer += `・${item.name}（${item.category}）★${item.rating}\n`;
+                });
+                answer += '\n';
+            }
+
+            if (areaRestaurants.length + areaAttractions.length + areaShopping.length === 0) {
+                answer += '目前沒有收錄此區域的資訊。';
+            }
+
+            return answer;
         }
     }
 
-    // 預設回答
-    return `關於「${question}」的問題，以下是一些建議：\n\n沖繩是個非常適合自由行的地方，建議：\n1. 自駕是最方便的交通方式\n2. 行程安排由南到北或由北到南較順\n3. 每天安排2-3個景點不會太趕\n4. 記得防曬和多喝水\n\n你可以試著問我更具體的問題，例如：\n- 沖繩有哪些必吃美食？\n- 推薦燒肉餐廳\n- 北谷有什麼好玩的？\n- 親子旅遊推薦行程`;
+    // === 模糊搜尋：在所有資料中搜尋關鍵字 ===
+    const allItems = [...restaurants, ...attractions, ...shopping];
+    const searchResults = allItems.filter(item =>
+        item.name.toLowerCase().includes(q) ||
+        item.desc.toLowerCase().includes(q) ||
+        item.tips.toLowerCase().includes(q)
+    );
+
+    if (searchResults.length > 0) {
+        let answer = `找到以下相關結果：\n\n`;
+        searchResults.slice(0, 5).forEach(item => {
+            answer += `【${item.name}】${item.category} ★${item.rating}\n${item.desc}\n📍${item.area}\n\n`;
+        });
+        return answer;
+    }
+
+    // === 預設回答 ===
+    return `抱歉，我不太確定「${question}」的意思。\n\n你可以試試這樣問我：\n\n` +
+        `📌 推薦類：\n・「推薦一家燒肉」「最好的咖啡廳」「推薦一家你會選誰」\n\n` +
+        `📌 分類查詢：\n・「燒肉」「沖繩麵」「海灘」「甜點」「居酒屋」\n\n` +
+        `📌 區域查詢：\n・「那霸有什麼」「北谷」「恩納」「名護」\n\n` +
+        `📌 實用資訊：\n・「自駕注意事項」「必買伴手禮」「預算多少」「住宿推薦」`;
 }
 
 function addChatMessage(text, type) {
