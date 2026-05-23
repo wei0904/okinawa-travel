@@ -503,66 +503,71 @@ function findAnswer(question) {
         if (q.includes(keyword)) { matchedAttrCat = cat; break; }
     }
 
-    // === 「推薦一家」「最推薦」「選一間」「第一名」類型問題 ===
-    const isAskingForBest = q.includes('推薦一') || q.includes('最推') || q.includes('選一') ||
+    // === 判斷是否只要「一家」「其中一家」推薦 ===
+    const isAskingForOne = q.includes('一家') || q.includes('一間') || q.includes('其中') ||
+        q.includes('推薦一') || q.includes('最推') || q.includes('選一') ||
         q.includes('第一名') || q.includes('最好') || q.includes('no.1') || q.includes('冠軍') ||
         q.includes('最愛') || q.includes('最強') || q.includes('哪一家') || q.includes('哪間') ||
-        q.includes('選誰') || q.includes('首選');
+        q.includes('選誰') || q.includes('首選') || q.includes('必去') || q.includes('必吃');
 
-    if (isAskingForBest) {
-        // 如果有指定類別
-        if (matchedCategory) {
-            const best = restaurants.filter(r => r.category === matchedCategory).sort((a, b) => b.rating - a.rating)[0];
-            if (best) {
-                return `${matchedCategory}最推薦的一家：\n\n` +
-                    `【${best.name}】 ★${best.rating}\n` +
-                    `${best.desc}\n\n` +
-                    `區域：${best.area}\n地址：${best.address}\n價格：${best.price}\n營業時間：${best.hours}\n\n` +
-                    `小提醒：${best.tips}`;
-            }
+    // === 指定分類 + 只要一家 → 給人味推薦語 ===
+    if (matchedCategory && isAskingForOne) {
+        const pick = personalPicks[matchedCategory];
+        if (pick) {
+            return pick.reason + '\n\n💰 ' + pick.budget;
         }
-        if (matchedAttrCat) {
-            const best = attractions.filter(a => a.category === matchedAttrCat).sort((a, b) => b.rating - a.rating)[0];
-            if (best) {
-                return `${matchedAttrCat}最推薦的一個：\n\n` +
-                    `【${best.name}】 ★${best.rating}\n` +
-                    `${best.desc}\n\n` +
-                    `區域：${best.area}\n地址：${best.address}\n費用：${best.price}\n\n` +
-                    `小提醒：${best.tips}`;
-            }
-        }
-
-        // 沒指定類別 → 給出各類別的 Top 1
-        const topRestaurant = [...restaurants].sort((a, b) => b.rating - a.rating)[0];
-        const topAttraction = [...attractions].sort((a, b) => b.rating - a.rating)[0];
-        const topCafe = restaurants.filter(r => r.category === '咖啡廳').sort((a, b) => b.rating - a.rating)[0];
-        const topYakiniku = restaurants.filter(r => r.category === '燒肉').sort((a, b) => b.rating - a.rating)[0];
-        const topSoba = restaurants.filter(r => r.category === '拉麵/沖繩麵').sort((a, b) => b.rating - a.rating)[0];
-
-        return `如果各只能選一家，我的推薦是：\n\n` +
-            `【餐廳首選】${topRestaurant.name} ★${topRestaurant.rating}\n${topRestaurant.desc}\n📍${topRestaurant.area}\n\n` +
-            `【燒肉首選】${topYakiniku.name} ★${topYakiniku.rating}\n${topYakiniku.desc}\n📍${topYakiniku.area}\n\n` +
-            `【沖繩麵首選】${topSoba.name} ★${topSoba.rating}\n${topSoba.desc}\n📍${topSoba.area}\n\n` +
-            `【咖啡廳首選】${topCafe.name} ★${topCafe.rating}\n${topCafe.desc}\n📍${topCafe.area}\n\n` +
-            `【景點首選】${topAttraction.name} ★${topAttraction.rating}\n${topAttraction.desc}\n📍${topAttraction.area}`;
     }
 
-    // === 一般分類餐廳查詢 ===
+    if (matchedAttrCat && isAskingForOne) {
+        const pick = personalAttrPicks[matchedAttrCat];
+        if (pick) {
+            return pick.reason;
+        }
+    }
+
+    // === 沒指定分類 + 只要一家 → 各類 Top 1 人味版 ===
+    if (isAskingForOne) {
+        return `如果各只選一家，我的私心推薦：\n\n` +
+            `🥩【燒肉】燒肉琉球之牛 北谷店\n→ 邊看海邊吃和牛，沖繩才有的享受。必須預約！\n\n` +
+            `🍜【沖繩麵】きしもと食堂（本部）\n→ 百年老店，柴火煮的麵條口感獨特。去水族館那天中午吃。\n\n` +
+            `☕【咖啡廳】浜辺の茶屋（南城）\n→ 海水就在腳下的木造咖啡廳，光發呆就值得去。\n\n` +
+            `🐠【景點】沖繩美麗海水族館\n→ 站在黑潮之海前面看鯨鯊游過，會感動到起雞皮疙瘩。\n\n` +
+            `🌉【自然】古宇利大橋＆古宇利島\n→ 開車過橋的那2公里，兩側的海藍到不真實。\n\n` +
+            `🌮【平價美食】キングタコス 金武本店\n→ 塔可飯發源地，份量大到嚇人只要600圓。\n\n` +
+            `想聽某一類的詳細推薦嗎？可以問我「燒肉推薦一家」「咖啡廳哪間最好」之類的！`;
+    }
+
+    // === 指定分類（不限一家）→ 人味開頭 + 列表 ===
     if (matchedCategory) {
+        const pick = personalPicks[matchedCategory];
         const results = restaurants.filter(r => r.category === matchedCategory).sort((a, b) => b.rating - a.rating);
-        let answer = `${matchedCategory}推薦餐廳（依評分排序）：\n\n`;
-        results.slice(0, 5).forEach(r => {
-            answer += `【${r.name}】★${r.rating}\n${r.desc}\n📍${r.area} | 💰${r.price}\n\n`;
+        let answer = '';
+        if (pick) {
+            const topItem = findItemById(pick.pick);
+            answer += `我最推的是「${topItem ? topItem.name : ''}」，不過以下幾家也都很不錯：\n\n`;
+        } else {
+            answer += `${matchedCategory}推薦：\n\n`;
+        }
+        results.slice(0, 5).forEach((r, i) => {
+            answer += `${i + 1}. 【${r.name}】★${r.rating}\n${r.desc}\n📍${r.area} | 💰${r.price}\n\n`;
         });
+        if (pick) answer += `💰 ${pick.budget}`;
         return answer;
     }
 
-    // === 一般分類景點查詢 ===
+    // === 指定景點分類（不限一個）→ 人味開頭 + 列表 ===
     if (matchedAttrCat) {
+        const pick = personalAttrPicks[matchedAttrCat];
         const results = attractions.filter(a => a.category === matchedAttrCat).sort((a, b) => b.rating - a.rating);
-        let answer = `${matchedAttrCat}推薦（依評分排序）：\n\n`;
-        results.slice(0, 5).forEach(a => {
-            answer += `【${a.name}】★${a.rating}\n${a.desc}\n📍${a.area} | 💰${a.price}\n\n`;
+        let answer = '';
+        if (pick) {
+            const topItem = findItemById(pick.pick);
+            answer += `我最推的是「${topItem ? topItem.name : ''}」，其他也很值得去：\n\n`;
+        } else {
+            answer += `${matchedAttrCat}推薦：\n\n`;
+        }
+        results.slice(0, 5).forEach((a, i) => {
+            answer += `${i + 1}. 【${a.name}】★${a.rating}\n${a.desc}\n📍${a.area} | 💰${a.price}\n\n`;
         });
         return answer;
     }
