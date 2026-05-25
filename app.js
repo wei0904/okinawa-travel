@@ -211,7 +211,7 @@ function showDetail(id) {
             </div>
         </div>
 
-        <button class="modal-add-route" onclick="addToRoute('${item.id}'); closeModal();">加入行程 Day ${currentDay}</button>
+        <button class="modal-add-route" onclick="addToRoute('${item.id}');">加入行程</button>
     `;
 
     document.getElementById('modal').classList.add('show');
@@ -254,21 +254,60 @@ function bindRouteControls() {
     document.getElementById('export-route').addEventListener('click', exportRoute);
 }
 
-function addToRoute(id) {
+function addToRoute(id, day) {
     const item = findItemById(id);
     if (!item) return;
 
-    if (!routePlan[currentDay]) routePlan[currentDay] = [];
+    // 如果沒指定天數，彈出選擇器（只有1天時直接加入）
+    if (!day) {
+        if (totalDays <= 1) {
+            day = 1;
+        } else {
+            showDayPicker(id);
+            return;
+        }
+    }
+
+    if (!routePlan[day]) routePlan[day] = [];
 
     // 檢查是否已存在
-    if (routePlan[currentDay].find(i => i.id === id)) {
-        showToast(`${item.name} 已在 Day ${currentDay} 行程中`);
+    if (routePlan[day].find(i => i.id === id)) {
+        showToast(`${item.name} 已在 Day ${day} 行程中`);
         return;
     }
 
-    routePlan[currentDay].push(item);
+    routePlan[day].push(item);
     saveRouteToStorage();
-    showToast(`已將 ${item.name} 加入 Day ${currentDay}`);
+    showToast(`已將 ${item.name} 加入 Day ${day}`);
+    closeDayPicker();
+}
+
+function showDayPicker(id) {
+    closeDayPicker();
+    const overlay = document.createElement('div');
+    overlay.className = 'day-picker-overlay';
+    overlay.onclick = closeDayPicker;
+
+    const picker = document.createElement('div');
+    picker.className = 'day-picker';
+    picker.onclick = e => e.stopPropagation();
+
+    picker.innerHTML = `
+        <p class="day-picker-title">選擇加入哪一天</p>
+        <div class="day-picker-buttons">
+            ${Array.from({length: totalDays}, (_, i) => i + 1)
+                .map(d => `<button class="day-picker-btn${d === currentDay ? ' current' : ''}" onclick="addToRoute('${id}', ${d})">Day ${d}</button>`)
+                .join('')}
+        </div>
+    `;
+
+    overlay.appendChild(picker);
+    document.body.appendChild(overlay);
+}
+
+function closeDayPicker() {
+    const existing = document.querySelector('.day-picker-overlay');
+    if (existing) existing.remove();
 }
 
 function removeFromRoute(day, id) {

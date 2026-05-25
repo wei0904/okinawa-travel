@@ -703,6 +703,63 @@ header .subtitle {
     background: #e64a19;
 }
 
+/* 天數選擇器 */
+.day-picker-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-picker {
+    background: white;
+    border-radius: 16px;
+    padding: 20px 24px;
+    max-width: 320px;
+    width: 85%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.day-picker-title {
+    font-size: 1.05em;
+    font-weight: 600;
+    text-align: center;
+    margin: 0 0 14px 0;
+    color: #333;
+}
+
+.day-picker-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.day-picker-btn {
+    padding: 8px 18px;
+    border: 2px solid #ff7043;
+    background: white;
+    color: #ff7043;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.day-picker-btn:hover {
+    background: #ff7043;
+    color: white;
+}
+
+.day-picker-btn.current {
+    background: #ff7043;
+    color: white;
+}
+
 /* 提示訊息 */
 .toast {
     position: fixed;

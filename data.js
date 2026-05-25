@@ -278,6 +278,10 @@ const restaurants = [
       desc:"精品咖啡店，自家烘焙，可以買到沖繩限定的咖啡豆伴手禮。",
       address:"沖繩縣恩納村山田3155-1", hours:"9:00~18:00",
       tips:"拿鐵和手沖都推薦。咖啡豆適合當伴手禮。", mapQuery:"Okinawa Cerrado Coffee 恩納", jpName:"沖縄セラードコーヒー" },
+    { id:"r57", name:"星野リゾート バンタカフェ (Banta Cafe)", category:"咖啡廳", area:"讀谷", icon:"🌊", price:"~1000", rating:4.6,
+      desc:"全日本最大規模的海景咖啡廳，由星野集團經營。依斷崖地形打造四個風格不同的座位區，可近距離感受沖繩的海。",
+      address:"沖繩縣讀谷村儀間560", hours:"10:00~日落（依季節調整）",
+      tips:"推薦岩上テラス座位區，視野最開闊。旁邊有Olu Grille可吃正餐。不需住星野也能來。", mapQuery:"星野リゾート バンタカフェ 読谷", jpName:"星野リゾート バンタカフェ" },
 
     // ─── 甜點/冰品 ───
     { id:"r60", name:"Blue Seal 牧港本店", category:"甜點/冰品", area:"浦添", icon:"🍦", price:"~500", rating:4.4,
