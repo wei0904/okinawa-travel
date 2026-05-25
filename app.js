@@ -258,14 +258,10 @@ function addToRoute(id, day) {
     const item = findItemById(id);
     if (!item) return;
 
-    // 如果沒指定天數，彈出選擇器（只有1天時直接加入）
+    // 如果沒指定天數，彈出選擇器
     if (!day) {
-        if (totalDays <= 1) {
-            day = 1;
-        } else {
-            showDayPicker(id);
-            return;
-        }
+        showDayPicker(id);
+        return;
     }
 
     if (!routePlan[day]) routePlan[day] = [];
