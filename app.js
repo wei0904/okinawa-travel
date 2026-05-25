@@ -4,6 +4,22 @@ let currentCategory = 'all';
 let currentDay = 1;
 let totalDays = 5;
 let routePlan = {}; // { 1: [item, ...], 2: [...] }
+let currentRoomId = null;
+let roomRef = null;
+let isFirebaseSync = false; // 防止無限迴圈
+
+// Firebase 初始化
+const firebaseConfig = {
+    apiKey: "AIzaSyBGmIPrjVgDVZMnXtgvB1oZZ632ML4aGyU",
+    authDomain: "okinawa-73386.firebaseapp.com",
+    databaseURL: "https://okinawa-73386-default-rtdb.firebaseio.com",
+    projectId: "okinawa-73386",
+    storageBucket: "okinawa-73386.firebasestorage.app",
+    messagingSenderId: "898649758931",
+    appId: "1:898649758931:web:5e404da2e667159fa90826"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 // 初始化路線資料
 for (let i = 1; i <= totalDays; i++) routePlan[i] = [];
@@ -241,13 +257,15 @@ function bindRouteControls() {
         newTab.className = 'day-tab';
         newTab.dataset.day = totalDays;
         newTab.textContent = `Day ${totalDays}`;
+        const dayNum = totalDays;
         newTab.addEventListener('click', () => {
             document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
             newTab.classList.add('active');
-            currentDay = totalDays;
+            currentDay = dayNum;
             renderRoute();
         });
         document.getElementById('add-day').before(newTab);
+        saveRouteToStorage();
     });
 
     // 匯出行程
@@ -740,8 +758,189 @@ function showToast(message) {
     setTimeout(() => toast.remove(), 2000);
 }
 
+// === 共同編輯房間 ===
+function generateRoomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+}
+
+function createRoom() {
+    const code = generateRoomCode();
+    const ref = db.ref('rooms/' + code);
+
+    // 將目前行程存到 routePlan 的格式轉為可存入 Firebase 的格式
+    const data = {
+        totalDays: totalDays,
+        routePlan: routePlanToFirebase(),
+        createdAt: Date.now()
+    };
+
+    ref.set(data).then(() => {
+        currentRoomId = code;
+        roomRef = ref;
+        localStorage.setItem('okinawa-roomId', code);
+        listenToRoom();
+        updateRoomUI();
+        showToast(`房間已建立！代碼：${code}`);
+    }).catch(err => {
+        showToast('建立房間失敗，請稍後再試');
+    });
+}
+
+function joinRoom() {
+    const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+    if (!code || code.length !== 6) {
+        showToast('請輸入 6 位房間代碼');
+        return;
+    }
+
+    const ref = db.ref('rooms/' + code);
+    ref.once('value').then(snapshot => {
+        if (!snapshot.exists()) {
+            showToast('找不到此房間，請確認代碼');
+            return;
+        }
+
+        currentRoomId = code;
+        roomRef = ref;
+        localStorage.setItem('okinawa-roomId', code);
+
+        // 載入房間資料
+        const data = snapshot.val();
+        applyFirebaseData(data);
+        listenToRoom();
+        updateRoomUI();
+        showToast(`已加入房間 ${code}`);
+    }).catch(() => {
+        showToast('加入房間失敗，請稍後再試');
+    });
+}
+
+function leaveRoom() {
+    if (roomRef) roomRef.off();
+    currentRoomId = null;
+    roomRef = null;
+    localStorage.removeItem('okinawa-roomId');
+    updateRoomUI();
+    showToast('已離開房間，切回離線模式');
+}
+
+function listenToRoom() {
+    if (!roomRef) return;
+    roomRef.on('value', snapshot => {
+        if (!snapshot.exists()) return;
+        const data = snapshot.val();
+        isFirebaseSync = true;
+        applyFirebaseData(data);
+        isFirebaseSync = false;
+    });
+}
+
+function applyFirebaseData(data) {
+    if (data.totalDays) {
+        totalDays = data.totalDays;
+    }
+    routePlan = {};
+    for (let i = 1; i <= totalDays; i++) routePlan[i] = [];
+
+    if (data.routePlan) {
+        for (const [day, items] of Object.entries(data.routePlan)) {
+            const dayNum = parseInt(day);
+            if (Array.isArray(items)) {
+                // items 存的是 id 清單，要還原成完整物件
+                routePlan[dayNum] = items.map(id => findItemById(id)).filter(Boolean);
+            }
+        }
+    }
+
+    // 更新 Day tabs
+    rebuildDayTabs();
+    saveRouteToLocalStorage();
+
+    if (currentTab === 'route') {
+        renderRoute();
+    }
+}
+
+function routePlanToFirebase() {
+    const result = {};
+    for (let d = 1; d <= totalDays; d++) {
+        const items = routePlan[d] || [];
+        result[d] = items.map(item => item.id);
+    }
+    return result;
+}
+
+function syncToFirebase() {
+    if (!roomRef || isFirebaseSync) return;
+    roomRef.update({
+        totalDays: totalDays,
+        routePlan: routePlanToFirebase()
+    });
+}
+
+function rebuildDayTabs() {
+    const tabsContainer = document.querySelector('.day-tabs');
+    const addBtn = document.getElementById('add-day');
+    // 移除現有 day-tab 按鈕
+    tabsContainer.querySelectorAll('.day-tab').forEach(t => t.remove());
+
+    for (let d = 1; d <= totalDays; d++) {
+        const btn = document.createElement('button');
+        btn.className = 'day-tab' + (d === currentDay ? ' active' : '');
+        btn.dataset.day = d;
+        btn.textContent = `Day ${d}`;
+        btn.addEventListener('click', () => {
+            tabsContainer.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            currentDay = d;
+            renderRoute();
+        });
+        addBtn.before(btn);
+    }
+}
+
+function updateRoomUI() {
+    const status = document.getElementById('room-status');
+    const leaveBtn = document.getElementById('leave-room-btn');
+    const input = document.getElementById('room-code-input');
+
+    if (currentRoomId) {
+        status.innerHTML = `<span class="room-online">已連線房間：<strong>${currentRoomId}</strong>（分享代碼給朋友即可一起編輯）</span>`;
+        leaveBtn.style.display = 'inline-block';
+        if (input) input.value = '';
+    } else {
+        status.innerHTML = '<span class="room-offline">目前為離線模式（行程僅存在本機）</span>';
+        leaveBtn.style.display = 'none';
+    }
+}
+
+function tryReconnectRoom() {
+    const savedRoom = localStorage.getItem('okinawa-roomId');
+    if (savedRoom) {
+        const ref = db.ref('rooms/' + savedRoom);
+        ref.once('value').then(snapshot => {
+            if (snapshot.exists()) {
+                currentRoomId = savedRoom;
+                roomRef = ref;
+                listenToRoom();
+                updateRoomUI();
+            } else {
+                localStorage.removeItem('okinawa-roomId');
+            }
+        });
+    }
+}
+
 // === LocalStorage 持久化 ===
 function saveRouteToStorage() {
+    saveRouteToLocalStorage();
+    syncToFirebase();
+}
+
+function saveRouteToLocalStorage() {
     localStorage.setItem('okinawa-route', JSON.stringify(routePlan));
     localStorage.setItem('okinawa-totalDays', totalDays);
 }
@@ -757,4 +956,6 @@ function loadRouteFromStorage() {
     if (savedDays) {
         totalDays = parseInt(savedDays);
     }
+    // 嘗試重新連線房間
+    tryReconnectRoom();
 }

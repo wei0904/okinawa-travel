@@ -760,6 +760,96 @@ header .subtitle {
     color: white;
 }
 
+/* 共同編輯房間 */
+.room-panel {
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.room-status {
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 0.95em;
+}
+
+.room-offline {
+    color: #999;
+}
+
+.room-online {
+    color: #4caf50;
+}
+
+.room-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.room-btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.room-create {
+    background: #4caf50;
+    color: white;
+}
+
+.room-create:hover {
+    background: #388e3c;
+}
+
+.room-join {
+    background: #2196f3;
+    color: white;
+}
+
+.room-join:hover {
+    background: #1976d2;
+}
+
+.room-leave {
+    background: #ef5350;
+    color: white;
+}
+
+.room-leave:hover {
+    background: #d32f2f;
+}
+
+.room-join-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.room-join-group input {
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 20px;
+    width: 120px;
+    font-size: 0.9em;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.room-join-group input:focus {
+    outline: none;
+    border-color: #2196f3;
+}
+
 /* 提示訊息 */
 .toast {
     position: fixed;
